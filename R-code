@@ -1,0 +1,85 @@
+head(India_Q_GDP)
+library(tidyverse)
+colnames(India_Q_GDP) <- c("Year", "Quarter", "GDP")
+head(India_Q_GDP)
+
+library(tidyverse)
+gdp_clean <- India_Q_GDP %>%
+  fill(Year, .direction = "down") %>%          
+  filter(Quarter %in% c("Q1","Q2","Q3","Q4"))
+head(gdp_clean, 12)
+nrow(gdp_clean)
+
+gdp_ts <- ts(gdp_clean$GDP,
+             start = c(2011, 1),    
+             frequency = 4)         
+print(gdp_ts)
+plot(gdp_ts,
+     main = "India Quarterly GDP (2011-2025)",
+     ylab = "GDP (Rupees Crores)",
+     xlab = "Year",
+     col = "steelblue",
+     lwd = 2)
+
+gdp_clean$GDP_log <- log(gdp_clean$GDP)
+gdp_log_ts <- ts(gdp_clean$GDP_log,
+                 start = c(2011, 1),
+                 frequency = 4)
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 2))
+plot(gdp_ts,
+     main = "Original GDP",
+     ylab = "GDP (Rupees Crores)",
+     col = "steelblue", lwd = 2)
+plot(gdp_log_ts,
+     main = "Log Transformed GDP",
+     ylab = "log(GDP)",
+     col = "darkgreen", lwd = 2)
+par(mfrow = c(1, 1))
+
+gdp_stl <- stl(gdp_log_ts, s.window = "periodic")
+plot(gdp_stl,
+     main = "STL Decomposition of India Quarterly GDP")
+
+install.packages("tseries")
+library(tseries)
+adf.test(gdp_log_ts)
+
+
+gdp_diff <- diff(gdp_log_ts, differences = 1)
+plot(gdp_diff,
+     main = "First Differenced Log GDP",
+     ylab = "Difference",
+     col = "steelblue",
+     lwd = 2)
+adf.test(gdp_diff)
+
+
+install.packages("forecast")
+library(forecast)
+par(mfrow = c(1, 2), mar = c(4, 4, 3, 2))
+Acf(gdp_diff,
+    main = "ACF of Differenced Log GDP",
+    col = "steelblue")
+Pacf(gdp_diff,
+     main = "PACF of Differenced Log GDP",
+     col = "darkred")
+par(mfrow = c(1, 1))
+
+library(forecast)
+sarima_model <- auto.arima(gdp_log_ts,
+                           seasonal = TRUE,    
+                           stepwise = FALSE,   
+                           approximation = FALSE, 
+                           trace = TRUE)       
+
+summary(sarima_model)
+checkresiduals(sarima_model)
+
+gdp_forecast <- forecast(sarima_model, h = 8)
+plot(gdp_forecast,
+     main = "India GDP Forecast (2025-2027)",
+     ylab = "log(GDP)",
+     xlab = "Year",
+     col = "steelblue",
+     lwd = 2)
+accuracy(sarima_model)
