@@ -24,6 +24,7 @@ forecast
 SARIMA 
 ggplot2
 
+
 KEY FINDINGS :
 1) India's quarterly GDP shows a consistent seasonal pattern — Q4 (January–March) always records the highest output due to fiscal year-end government spending
 2) Q2 (July–September) consistently records the lowest output due to the monsoon season
